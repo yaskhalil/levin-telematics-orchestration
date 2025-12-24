@@ -1,1 +1,5 @@
-# Astro Runtime includes the following pre-installed providers packages: https://www.astronomer.io/docs/astro/runtime-image-architecture#provider-packages
+# Astro Runtime includes some pre-installed provider packages:
+# https://www.astronomer.io/docs/astro/runtime-image-architecture#provider-packages
+#
+# This project uses PostgresHook, which lives in the Postgres provider.
+apache-airflow-providers-postgres

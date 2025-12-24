@@ -22,7 +22,7 @@ PG_CONN_ID = os.getenv("PG_CONN_ID", "postgres_default")
 SOURCE_CSV = os.getenv("TELEMETRY_SOURCE_FILE", "data/v2.csv")
 
 SQL_CREATE = Path("include/sql/00_create_tables.sql")
-SQL_AGG = Path("include/sql/01_build_daily_aggregate.sql")
+SQL_AGG = Path("include/sql/10_daily_aggregate.sql")
 
 INSERT_SQL = """
 INSERT INTO raw_telematics (
