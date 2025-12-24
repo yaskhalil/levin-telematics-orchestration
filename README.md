@@ -1,2 +1,2 @@
 # levin-telematics-orchestration
-Production style Airflow 3 data platform for Levin vehicle telematics.
+Production style Airflow 3 + Astro CLI pipeline for Levin telematics with validation, backfills, and Postgres publishing.
