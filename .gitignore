@@ -11,4 +11,5 @@ airflow.cfg
 airflow.db
 DataForDevelopment/
 scripts/
-data/
+data/v2.csv
+
