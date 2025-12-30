@@ -53,24 +53,29 @@ def _run_sql_for_ds(hook: PostgresHook, sql_path: Path, ds: str) -> None:
     tags=["levin", "telematics"],
 )
 def levin_pipeline():
+    # 1) create tables (SQL file) is run
     @task
     def create_tables() -> None:
         PostgresHook(PG_CONN_ID).run(_read_sql(SQL_CREATE))
 
+    # 2) ingest ds rows from one CSV into Postgres (skip duplicates)
     @task
     def ingest(ds: str) -> None:
+        # 1) read CSV into pandas dataframe
         src = Path(SOURCE_CSV)
         if not src.exists():
             raise AirflowFailException(f"CSV not found: {src}")
 
+        # 2) read CSV into pandas dataframe
         df = pd.read_csv(src)
 
+        # 3) validate required columns
         # required columns
         for c in ("timeStamp", "tripID", "deviceID"):
             if c not in df.columns:
                 raise AirflowFailException(f"Missing column: {c}")
 
-        # parse timestamps + filter to ds
+        # 4) parse timestamps + filter to ds
         df["event_time"] = pd.to_datetime(df["timeStamp"], errors="coerce")
         df = df[df["event_time"].notna()]
         df = df[df["event_time"].dt.date == pd.to_datetime(ds).date()]
@@ -79,11 +84,12 @@ def levin_pipeline():
         def col(name):
             return df[name] if name in df.columns else [None] * len(df)
 
-        # numeric coercions (optional)
+        # 5) numeric coercions (optional)
         for c in ["gps_speed", "battery", "cTemp", "dtc", "eLoad", "iat", "imap", "kpl", "maf", "rpm", "speed", "tAdv", "tPos"]:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors="coerce")
 
+        # 6) zip into list of tuples
         rows = list(
             zip(
                 df["event_time"].dt.to_pydatetime(),
@@ -125,6 +131,7 @@ def levin_pipeline():
         finally:
             conn.close()
 
+    # 3) build daily aggregate by running the SQL (10_daily_aggregate.sql)
     @task
     def aggregate(ds: str) -> None:
         _run_sql_for_ds(PostgresHook(PG_CONN_ID), SQL_AGG, ds)
