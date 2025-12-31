@@ -121,12 +121,6 @@ levin-telematics-airflow-platform/
 
 ## Data format
 
-### Demo mode (recommended)
-This repo is designed to be runnable without external downloads by using the included CSV:
-
-```
-data/v2.csv
-```
 
 The pipeline filters the dataset by the Airflow `ds` (execution date). For example:
 - `ds=2025-12-01` → loads only rows in `data/v2.csv` whose parsed timestamp is `2025-12-01`
