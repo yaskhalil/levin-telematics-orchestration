@@ -1,0 +1,22 @@
+{
+  "ds": "2018-01-15",
+  "source_file": "data/v2.csv",
+  "total_rows": 3120272,
+  "filtered_rows": 48748,
+  "has_data_for_run_date": true,
+  "data_min_date": "2017-11-18",
+  "data_max_date": "2018-01-31",
+  "valid_rows": 48748,
+  "invalid_rows": 0,
+  "invalid_breakdown": {
+    "device_id_null": 0,
+    "rpm_non_numeric": 0,
+    "rpm_out_of_range": 0,
+    "cTemp_non_numeric": 0,
+    "speed_non_numeric": 0,
+    "cTemp_out_of_range": 0,
+    "speed_out_of_range": 0,
+    "timestamp_parse_failed": 0
+  },
+  "attempted_inserts": 48748
+}

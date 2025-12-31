@@ -38,7 +38,7 @@ This repo is intentionally focused on **orchestration + reliability patterns** (
 - **Apache Airflow 3** (TaskFlow + dynamic task mapping)
 - **Postgres**
 - **Python** (pandas optional)
-- **Pandera** (or Great Expectations) for validation
+- **Pandas-only** contract validation (lightweight, no extra deps)
 
 ---
 
@@ -60,13 +60,11 @@ levin-telematics-airflow-platform/
       .gitkeep
 
   data/
-    sample/
-      date=YYYY-MM-DD/
-        levin.csv
+    v2.csv
 
   scripts/
-    partition_raw.py          # optional: full dataset -> date partitions
-    README_DATA.md            # optional: data notes / provenance
+    partition_raw.py          # optional: full dataset -> date partitions (future)
+    README_DATA.md            # optional: data notes / provenance (future)
 
   tests/
     test_validation.py
@@ -124,21 +122,21 @@ levin-telematics-airflow-platform/
 ## Data format
 
 ### Demo mode (recommended)
-This repo is designed to be runnable without external downloads by keeping a small sample slice in:
+This repo is designed to be runnable without external downloads by using the included CSV:
 
 ```
-data/sample/date=YYYY-MM-DD/levin.csv
+data/v2.csv
 ```
 
-The pipeline reads partitions using the Airflow `ds` (execution date). For example:
-- `ds=2025-12-01` → reads `data/sample/date=2025-12-01/levin.csv`
+The pipeline filters the dataset by the Airflow `ds` (execution date). For example:
+- `ds=2025-12-01` → loads only rows in `data/v2.csv` whose parsed timestamp is `2025-12-01`
 
 ### Full dataset mode (optional)
 If you want to ingest the entire Kaggle dataset, you can:
 1. download it locally (outside the repo)
 2. run `scripts/partition_raw.py` to produce:
-   - `data/partitioned/date=YYYY-MM-DD/levin.csv`
-3. update the config/env var to point Airflow at `data/partitioned/`
+   - `data/partitioned/date=YYYY-MM-DD/<your_file>.csv`
+3. update the config/env var to point Airflow at `data/partitioned/` (and update the DAG to read per-partition files)
 
 ---
 
@@ -235,7 +233,7 @@ Airflow UI runs locally once Astro starts (check your terminal output for the ex
 Trigger:
 - `levin_ingest_validate_publish`
 
-Use an execution date that matches an available sample partition in `data/sample/`.
+Use an execution date that exists in `data/v2.csv` timestamps (the DAG will filter rows for that `ds`).
 
 ### Trigger a backfill run
 Trigger:
@@ -255,11 +253,11 @@ with `dag_run.conf`:
 This project supports a simple “data root” config so you can switch between sample and full partitions.
 
 Common options:
-- environment variable like `TELEMETRY_DATA_ROOT=data/sample`
+- environment variable like `TELEMETRY_DATA_ROOT=data`
 - or Airflow Variable/Connection
 
 Example roots:
-- `data/sample`
+- `data` (for `data/v2.csv`)
 - `data/partitioned`
 
 ---
@@ -289,6 +287,34 @@ This project is meant to demonstrate production patterns that employers care abo
 - **Clean local dev experience** via Astro CLI
 
 ---
+
+## README alignment checklist (what’s done vs what’s left)
+
+This section tracks the repo’s current state against the “final product” described above.
+
+### Completed
+- [x] Astro/Airflow project scaffold exists (Docker/Astro runtime)
+- [x] Local Postgres connection config exists (`airflow_settings.yaml` → `postgres_default`)
+- [x] Artifacts directory exists (`include/artifacts/.gitkeep`)
+
+### Completed (end-to-end verified)
+- [x] Daily DAG `levin_ingest_validate_publish` runs end-to-end:
+  - [x] Resolves partition date (supports `dag_run.conf["ds"]` override)
+  - [x] Extracts from `data/v2.csv` and filters to the run date
+  - [x] Validates contract (pandas-only) with counters + breakdown
+  - [x] Normalizes to canonical raw schema (`vehicle_id` derived from `device_id`, numeric coercions, payload)
+  - [x] Loads `raw_telematics` idempotently (unique constraint-based conflict handling)
+  - [x] Builds curated `agg_vehicle_day` for the partition date
+  - [x] Publishes artifacts:
+    - [x] `include/artifacts/date=YYYY-MM-DD/summary.md`
+    - [x] `include/artifacts/date=YYYY-MM-DD/metrics.json`
+- [x] Backfill DAG `levin_backfill_range` implemented with dynamic task mapping (triggers daily DAG per date range)
+- [x] Postgres schema + SQL aligned to README table names (`raw_telematics`, `agg_vehicle_day`)
+- [x] Tests added (DAG import, validation, transformations)
+
+### Remaining (to fully match the README final product)
+- [ ] Implement a real data-root configuration path (e.g., `TELEMETRY_DATA_ROOT`) that matches actual runtime behavior (optional for demo mode)
+- [ ] (Optional) Streamlit explorer for curated tables + data quality
 
 ## License / data notes
 

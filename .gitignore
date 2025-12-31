@@ -9,7 +9,7 @@ airflow-webserver.pid
 webserver_config.py
 airflow.cfg
 airflow.db
-DataForDevelopment/
 scripts/
 data/v2.csv
+
 
