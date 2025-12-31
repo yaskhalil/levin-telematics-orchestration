@@ -12,6 +12,7 @@ This file is the operational checklist for finishing and validating the README â
   - `include/artifacts/date=YYYY-MM-DD/metrics.json`
 - Backfill DAG `levin_backfill_range` triggers daily runs over a date range (dynamic mapping).
 - `pytest` passes (validation, transformations, DAG import tests).
+- **NOTE** when running manuel add {"ds" : "2018-1-1"} to allow it to run properly
 
 ---
 
